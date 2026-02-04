@@ -4,6 +4,15 @@
 
 **A layout specification language that LLMs can actually see.**
 
+---
+
+> *"I see nobody on the road," said Alice.*
+> *"I only wish I had such eyes," the King remarked in a fretful tone. "To be able to see Nobody! And at that distance, too!"*
+>
+> — Lewis Carroll, *Through the Looking-Glass*
+
+**[Read the theory →](doc/)** Why spatial text encoding might matter beyond layout.
+
 ## The Problem
 
 LLMs are bad at frontend layout. Not because they can't write CSS — they can. They're bad because they **can't see what they're building**. Layout is a spatial problem, and LLMs think in text.
