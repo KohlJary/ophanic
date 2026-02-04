@@ -1,0 +1,11 @@
+{
+  "name": "ophanic",
+  "version": "1.0.0",
+  "description": "Visual layout diagrams for React components using Unicode box-drawing",
+  "author": {
+    "name": "Kohl",
+    "email": "kohlbern@gmail.com"
+  },
+  "keywords": ["layout", "diagram", "react", "css", "responsive", "ui"],
+  "repository": "https://github.com/KohlJary/ophanic"
+}

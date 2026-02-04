@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ophanic"
+version = "1.0.0"
+description = "Visual layout diagrams for React components using Unicode box-drawing"
+readme = "README.md"
+license = {text = "Hippocratic License 3.0"}
+authors = [
+    {name = "Kohl", email = "kohlbern@gmail.com"}
+]
+keywords = ["layout", "diagram", "react", "css", "responsive", "ui", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Text Processing :: Markup",
+]
+requires-python = ">=3.10"
+
+[project.urls]
+Homepage = "https://github.com/KohlJary/ophanic"
+Repository = "https://github.com/KohlJary/ophanic"
+
+[project.scripts]
+ophanic = "ophanic.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ophanic*"]
+
+[tool.setuptools.package-data]
+ophanic = ["py.typed"]
