@@ -576,3 +576,68 @@ Implemented the core Thymos architecture as specified in `doc/thymos-SPEC.md`:
 ```
 
 ### Next: Phase 2 — Social Memory
+
+---
+
+## 2026-02-05: Social Memory Phase 2 Complete
+
+### What was done
+
+Implemented the Social Memory architecture as specified in `doc/ophanic-social-memory-SPEC.md`:
+
+1. **Data Models** (`social_memory/models.py`)
+   - `Entity`: GUID slugs (4-char hex), metadata, profiles, organization support
+   - `Relationship`: directed edges with status, timelines, events
+   - `RelationshipEvent`: timestamped events with affect deltas
+   - `SpatialSnapshot`: Ophanic topology encoding with entity positions, edges
+   - `SocialMemory`: store with indexing and lookup methods
+
+2. **Rendering** (`social_memory/rendering.py`)
+   - `render_snapshot()`: Ophanic box-drawing diagram from topology
+   - `render_legend()`: Entity and relationship summaries
+   - `render_context()`: Full minimal context (~300 tokens)
+   - `render_temporal_stack()`: Compressed timeline view
+
+3. **Drill-Down Tools** (`social_memory/tools.py`)
+   - `/expand <slug>`: Full entity profile or relationship record
+   - `/expand <slug> --timeline`: Relationship trajectory
+   - `/expand <slug> --affect`: How entity has affected Thymos
+   - `/nearby <slug>`: Spatially close entities with relationships
+   - `/history`: Temporal stack by location or entity
+   - `/cluster`: Detect social groupings
+   - `/delta <timestamp>`: Changes since given time
+
+4. **Thymos Integration** (`social_memory/thymos_integration.py`)
+   - `annotate_snapshot()`: Attach Thymos state to snapshots
+   - `compute_affective_geography()`: Emergent associations from history
+   - `predict_affect_impact()`: Predict affect from proposed configuration
+   - Full serialized Thymos states with █T references
+
+5. **Demo** (`social_memory/demo.py`)
+   - Interactive terminal walkthrough
+   - Populated example: The Velvet venue with 5 entities, relationships
+   - Demonstrates all tools, temporal stacking, Thymos integration
+   - Run with: `python -m social_memory.demo`
+
+6. **Tests** (`social_memory/tests/test_social_memory.py`)
+   - 26 passing tests covering all components
+
+### Key design decisions
+
+- 4-char hex slugs (65,536 per namespace) for compact spatial encoding
+- Relationships are directed with timeline events
+- Snapshots carry affect annotations for felt-delta awareness
+- Affective geography emerges from historical correlation
+- Token economics: ~300 tokens vs 10,000-20,000 for conversation history
+
+### Phase 2 roadmap item: COMPLETE
+
+```
+✓ Extend Ophanic parser for social topology diagrams
+✓ GUID slug system, legend format
+✓ Drill-down tools (/expand, /history, /nearby, /cluster, /delta)
+✓ Temporal stacking with compression
+✓ Thymos integration (affect annotation, affective geography)
+```
+
+### Next: Phase 3 — Integration
