@@ -2,7 +2,52 @@
 
 ## Overview
 
-Ophanic is a text-based layout specification format that uses Unicode box-drawing characters to represent UI layouts. The goal is to bridge the gap between visual design and code by making spatial relationships syntactic (visible as text) rather than semantic (described abstractly).
+Ophanic is a text-native spatial encoding system. It started as a UI layout specification using Unicode box-drawing characters, but the core insight is broader: **spatial information encoded in text is natively perceivable by text-processing models**.
+
+The thesis (see `doc/text-is-all-you-need.md`): transformers are not "language models" but "text models." Text can encode spatial, structural, perceptual, and relational information when representations are designed for it. The capabilities attributed to scale and multimodal training may be latent capacities of text processing that haven't been deliberately exploited.
+
+## Current Implementation: Layout Tool
+
+The working toolchain handles UI layout specification:
+- Parse `.oph` diagrams to IR
+- Generate React/Tailwind from IR
+- Reverse-engineer React to diagrams
+- Import from Figma
+- Extract design tokens
+
+## Broader Architecture (Documented, Not Yet Implemented)
+
+The theory documents in `doc/` extend Ophanic to a complete cognitive architecture:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     COGNITIVE ARCHITECTURE                       │
+│                                                                  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
+│  │ OPHANIC          │  │ THYMOS           │  │ SOCIAL MEMORY │  │
+│  │ PERCEPTION       │  │ (felt self)      │  │ (relationships)│  │
+│  │                  │  │                  │  │               │  │
+│  │ Sensor grids →   │  │ Affect vector    │  │ Spatial       │  │
+│  │ Scene descriptions│  │ Needs register   │  │ topology      │  │
+│  │                  │  │ Felt state       │  │ Drill-down    │  │
+│  └────────┬─────────┘  └────────┬─────────┘  └───────┬───────┘  │
+│           │                     │                    │          │
+│           └─────────────────────┼────────────────────┘          │
+│                                 │                               │
+│                    ┌────────────▼────────────┐                  │
+│                    │    EXECUTIVE AGENT      │                  │
+│                    │    (general LLM)        │                  │
+│                    └─────────────────────────┘                  │
+│                                                                  │
+│  All layers use text-native spatial encoding                    │
+│  All layers are dual-readable (human + AI)                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+See:
+- `doc/ophanic-perception-architecture.md` — sensor → text grid → visual cortex → scene
+- `doc/thymos-SPEC.md` — affect/needs homeostasis as basis for agency
+- `doc/ophanic-social-memory-SPEC.md` — spatial encoding of social topology
 
 ## Architecture
 

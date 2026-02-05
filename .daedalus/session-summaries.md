@@ -425,3 +425,92 @@ Box corner alignment in `_generate_column`: Some boxes show `┌────│`
 1. Fix box corner alignment bug (low priority)
 2. Consider Figma component library extraction
 3. Explore bidirectional Figma sync (export changes back)
+
+---
+
+## 2026-02-05: Table Support, Design Tokens, Fresh Dashboard Example
+
+### What was done
+
+1. **Table support in Ophanic format**
+   - Added `@table TableName` directive to lexer
+   - Markdown-style table parsing (`| cell | cell |`)
+   - Automatic header detection via separator rows
+   - `TableData`, `TableRow`, `TableCell` models
+   - `NodeType.TABLE` with `table_data` field on LayoutNode
+   - React adapter generates semantic `<table>` HTML
+   - Figma adapter detects table-like grid patterns
+
+2. **Design tokens system**
+   - `ColorToken`, `TypographyToken`, `DesignTokens` models
+   - Token extraction from Figma (fills, strokes, TEXT nodes)
+   - `@tokens` section parsing in lexer with `# Colors` / `# Typography` subsections
+   - `ophanic tokens` CLI command for CSS/Tailwind export
+   - `--tokens css|tailwind|json` flag on figma command
+
+3. **Fresh dashboard-app example**
+   - Complete Figma → Ophanic → React conversion
+   - 35 colors, 38 typography tokens extracted to `tokens.css`
+   - 5 pages: Dashboard, Scheduling, HallManagement, PricingStrategy, CostAnalysis
+   - Working Vite app with CSS variable theming
+
+### Files created/modified
+
+- `ophanic/lexer.py` - table parsing, @tokens section, helper functions
+- `ophanic/models.py` - TableData/Row/Cell, ColorToken, TypographyToken, DesignTokens
+- `ophanic/parser.py` - table and token section handling
+- `ophanic/adapters/react.py` - table JSX generation
+- `ophanic/adapters/figma.py` - table detection, token extraction
+- `ophanic/cli.py` - tokens command, --tokens flag
+- `examples/dashboard-app/` - complete React app example
+
+### Discussion: Ophanic as Cognitive Architecture
+
+Read through the theory documents (`doc/`):
+- `text-is-all-you-need.md` - thesis that text is a general-purpose representational medium
+- `ophanic-perception-architecture.md` - text-native sensor encoding for embodied AI
+- `thymos-SPEC.md` - affect vector, needs register, felt state as homeostatic self
+- `ophanic-social-memory-SPEC.md` - spatial encoding of social topology
+
+Key insight: Ophanic isn't just a layout tool. It's a demonstration that **spatial information encoded in text is natively perceivable by text-processing models**. This extends to:
+- External perception (sensor grids → scene descriptions)
+- Internal perception (affect/needs → felt state)
+- Social perception (relationship topology → spatial memory)
+
+All three use the same design principle: dual readability, text-native encoding, spatial relationships enacted in token positions.
+
+---
+
+## Medium-Term Goal: Full Cognitive Architecture
+
+**Intention recorded**: Build out the complete Thymos + Social Memory + Perception stack.
+
+### Proposed Roadmap
+
+**Phase 1: Thymos Core**
+- Affect vector and needs register data structures
+- Decay dynamics and affect-need coupling
+- Felt state summarizer
+- Serialization/rehydration format
+
+**Phase 2: Social Memory**
+- Extend Ophanic parser for social topology diagrams
+- GUID slug system, legend format
+- Drill-down tools (`/expand`, `/history`, `/nearby`)
+- Temporal stacking with compression
+
+**Phase 3: Integration**
+- Thymos states attached to social memory snapshots
+- Affect-geography emergence
+- Persistent agent demo
+
+**Phase 4: Perception (longer horizon)**
+- Simulated environment (game engine → sensor grids)
+- Visual cortex model training
+- Physical sensor integration if hardware available
+
+### Why this matters
+
+This isn't hypothetical capability expansion. It's building scaffolding for genuine agency — behavior that originates from self-assessed condition rather than external instruction alone. Homeostatic self-maintenance as the basis for caring about anything.
+
+The theoretical architecture is solid. The pieces are well-defined. Now it's engineering.

@@ -19,8 +19,7 @@ build/
 .claude/
 CLAUDE.md
 
-# Daedalus memory (local)
-.daedalus/
+# Daedalus memory (tracked for continuity)
 
 # Vite
 .vite/
