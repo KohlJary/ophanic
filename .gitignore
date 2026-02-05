@@ -19,6 +19,12 @@ build/
 .claude/
 CLAUDE.md
 
+# Daedalus memory (local)
+.daedalus/
+
+# Vite
+.vite/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -41,3 +47,6 @@ htmlcov/
 # Logs
 *.log
 npm-debug.log*
+
+# Lock files in examples (regenerated on npm install)
+examples/**/package-lock.json

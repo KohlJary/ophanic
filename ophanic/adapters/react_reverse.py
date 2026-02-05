@@ -363,6 +363,10 @@ class DiagramGenerator:
             parts.append(f"# {doc.title}")
             parts.append("")
 
+        # Design tokens (if present)
+        if doc.tokens:
+            parts.append(doc.tokens.to_oph_section())
+
         # Breakpoints
         for bp in doc.breakpoints:
             parts.append(f"@{bp.breakpoint}")

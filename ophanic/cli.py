@@ -158,6 +158,44 @@ def main(args: list[str] | None = None) -> int:
         action="append",
         help="Filter by page name (can be repeated)",
     )
+    figma_cmd.add_argument(
+        "--tokens",
+        choices=["css", "tailwind", "json"],
+        help="Output only design tokens in specified format",
+    )
+    figma_cmd.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Bypass cache and fetch fresh data",
+    )
+    figma_cmd.add_argument(
+        "--json",
+        type=Path,
+        help="Use local Figma JSON file instead of fetching (for rate limit bypass)",
+    )
+
+    # tokens command - extract tokens from .oph files
+    tokens_cmd = subparsers.add_parser(
+        "tokens",
+        help="Extract design tokens from .oph file to CSS or Tailwind config",
+    )
+    tokens_cmd.add_argument(
+        "file",
+        type=Path,
+        help="Path to .oph file",
+    )
+    tokens_cmd.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Output file (default: stdout)",
+    )
+    tokens_cmd.add_argument(
+        "--format",
+        choices=["css", "tailwind", "json"],
+        default="css",
+        help="Output format (default: css)",
+    )
 
     parsed = parser.parse_args(args)
 
@@ -169,6 +207,8 @@ def main(args: list[str] | None = None) -> int:
         return _handle_reverse(parsed)
     if parsed.command == "figma":
         return _handle_figma(parsed)
+    if parsed.command == "tokens":
+        return _handle_tokens(parsed)
 
     return 0
 
@@ -315,7 +355,15 @@ def _handle_reverse(args: argparse.Namespace) -> int:
 def _handle_figma(args: argparse.Namespace) -> int:
     """Handle the figma command."""
     try:
-        from .adapters.figma import figma_to_diagram, FigmaOptions, FigmaAPIError
+        from .adapters.figma import (
+            figma_to_diagram,
+            figma_to_ophanic,
+            FigmaOptions,
+            FigmaAPIError,
+            FigmaConverter,
+        )
+        from .adapters.react_reverse import DiagramGenerator, ReverseOptions
+        import json as json_module
 
         options = FigmaOptions(
             token=args.token,
@@ -323,9 +371,50 @@ def _handle_figma(args: argparse.Namespace) -> int:
             node_ids=args.node_ids or [],
             include_pages=args.pages or [],
             diagram_width=args.width,
+            use_cache=not args.no_cache,
         )
 
-        output = figma_to_diagram(args.file_key, options)
+        # If --json flag, load from local file instead of API
+        if args.json:
+            print(f"Loading from local JSON: {args.json}")
+            file_data = json_module.loads(args.json.read_text(encoding="utf-8"))
+            converter = FigmaConverter(options)
+            doc = converter.convert(file_data)
+
+            if args.tokens:
+                if not doc.tokens:
+                    print("No design tokens found in file.", file=sys.stderr)
+                    return 1
+                if args.tokens == "css":
+                    output = doc.tokens.to_css_vars()
+                elif args.tokens == "tailwind":
+                    output = json_module.dumps(doc.tokens.to_tailwind_config(), indent=2)
+                else:
+                    output = json_module.dumps(doc.tokens.to_dict(), indent=2)
+            else:
+                max_depth = options.depth if options.depth else 4
+                reverse_opts = ReverseOptions(
+                    diagram_width=options.diagram_width,
+                    max_nesting_depth=max_depth,
+                )
+                generator = DiagramGenerator(reverse_opts)
+                output = generator.generate(doc)
+        else:
+            # Fetch from Figma API
+            if args.tokens:
+                doc = figma_to_ophanic(args.file_key, options)
+                if not doc.tokens:
+                    print("No design tokens found in file.", file=sys.stderr)
+                    return 1
+
+                if args.tokens == "css":
+                    output = doc.tokens.to_css_vars()
+                elif args.tokens == "tailwind":
+                    output = json_module.dumps(doc.tokens.to_tailwind_config(), indent=2)
+                else:  # json
+                    output = json_module.dumps(doc.tokens.to_dict(), indent=2)
+            else:
+                output = figma_to_diagram(args.file_key, options)
 
         if args.output:
             args.output.write_text(output, encoding="utf-8")
@@ -340,6 +429,40 @@ def _handle_figma(args: argparse.Namespace) -> int:
         return 1
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+def _handle_tokens(args: argparse.Namespace) -> int:
+    """Handle the tokens command - extract tokens from .oph files."""
+    import json
+
+    try:
+        doc = parse_file(args.file)
+
+        if not doc.tokens:
+            print(f"No @tokens section found in {args.file}", file=sys.stderr)
+            return 1
+
+        if args.format == "css":
+            output = doc.tokens.to_css_vars()
+        elif args.format == "tailwind":
+            output = json.dumps(doc.tokens.to_tailwind_config(), indent=2)
+        else:  # json
+            output = json.dumps(doc.tokens.to_dict(), indent=2)
+
+        if args.output:
+            args.output.write_text(output, encoding="utf-8")
+            print(f"Written to: {args.output}")
+        else:
+            print(output)
+
+        return 0
+
+    except FileNotFoundError:
+        print(f"File not found: {args.file}", file=sys.stderr)
         return 1
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

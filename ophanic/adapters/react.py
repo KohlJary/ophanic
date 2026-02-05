@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 from ..models import (
@@ -131,6 +131,9 @@ class ReactGenerator:
             content = self._escape_jsx(node.name or "")
             return f'{indent}<div className="p-4">{content}</div>'
 
+        if node.type == NodeType.TABLE:
+            return self._generate_table_jsx(node, depth)
+
         # Container
         classes = self._get_container_classes(node)
         class_str = f' className="{classes}"' if classes else ""
@@ -231,6 +234,48 @@ class ReactGenerator:
         # Otherwise, convert to PascalCase
         words = "".join(c if c.isalnum() or c in " _" else " " for c in name).split()
         return "".join(word.capitalize() for word in words) or "Component"
+
+    def _generate_table_jsx(self, node: LayoutNode, depth: int) -> str:
+        """Generate JSX for a table node."""
+        indent = self.indent_str * (depth + 1)
+        inner_indent = self.indent_str * (depth + 2)
+        cell_indent = self.indent_str * (depth + 3)
+
+        if not node.table_data or not node.table_data.rows:
+            return f"{indent}<table />"
+
+        lines = [f'{indent}<table className="w-full border-collapse">']
+
+        # Separate header and body rows
+        header_rows = [r for r in node.table_data.rows if r.is_header_row]
+        body_rows = [r for r in node.table_data.rows if not r.is_header_row]
+
+        # Table head
+        if header_rows:
+            lines.append(f"{inner_indent}<thead>")
+            for row in header_rows:
+                lines.append(f"{cell_indent}<tr>")
+                for cell in row.cells:
+                    content = self._escape_jsx(cell.content)
+                    classes = "border px-4 py-2 bg-gray-100 font-semibold text-left"
+                    lines.append(f'{cell_indent}  <th className="{classes}">{content}</th>')
+                lines.append(f"{cell_indent}</tr>")
+            lines.append(f"{inner_indent}</thead>")
+
+        # Table body
+        if body_rows:
+            lines.append(f"{inner_indent}<tbody>")
+            for row in body_rows:
+                lines.append(f"{cell_indent}<tr>")
+                for cell in row.cells:
+                    content = self._escape_jsx(cell.content)
+                    classes = "border px-4 py-2"
+                    lines.append(f'{cell_indent}  <td className="{classes}">{content}</td>')
+                lines.append(f"{cell_indent}</tr>")
+            lines.append(f"{inner_indent}</tbody>")
+
+        lines.append(f"{indent}</table>")
+        return "\n".join(lines)
 
     def _escape_jsx(self, text: str) -> str:
         """Escape text for JSX content."""

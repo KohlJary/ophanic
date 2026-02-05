@@ -9,13 +9,15 @@ This module handles:
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
-import json
 
 from ..models import (
     Direction,
@@ -24,11 +26,18 @@ from ..models import (
     OphanicDocument,
     BreakpointLayout,
     Proportion,
+    DesignTokens,
+    ColorToken,
+    TypographyToken,
+    TableData,
+    TableRow,
+    TableCell,
 )
 from .react_reverse import DiagramGenerator, ReverseOptions
 
 
 FIGMA_API_BASE = "https://api.figma.com/v1"
+FIGMA_CACHE_DIR = Path.home() / ".cache" / "ophanic" / "figma"
 
 
 @dataclass
@@ -40,6 +49,8 @@ class FigmaOptions:
     node_ids: list[str] = field(default_factory=list)  # Specific nodes to fetch
     include_pages: list[str] = field(default_factory=list)  # Filter by page names
     diagram_width: int = 80
+    use_cache: bool = True  # Use cached responses when available
+    cache_ttl: int = 3600  # Cache TTL in seconds (default: 1 hour)
 
 
 class FigmaAPIError(Exception):
@@ -52,10 +63,12 @@ class FigmaAPIError(Exception):
 
 
 class FigmaClient:
-    """Client for Figma REST API."""
+    """Client for Figma REST API with caching."""
 
-    def __init__(self, token: str | None = None):
+    def __init__(self, token: str | None = None, use_cache: bool = True, cache_ttl: int = 3600):
         self.token = token or os.environ.get("FIGMA_TOKEN")
+        self.use_cache = use_cache
+        self.cache_ttl = cache_ttl
         if not self.token:
             raise ValueError(
                 "Figma token required. Set FIGMA_TOKEN env var or pass token parameter."
@@ -88,7 +101,58 @@ class FigmaClient:
         if params:
             url += "?" + "&".join(params)
 
-        return self._request(url)
+        # Check cache first
+        cache_key = self._cache_key(file_key, depth, node_ids)
+        if self.use_cache:
+            cached = self._load_cache(cache_key)
+            if cached:
+                print(f"Using cached Figma data ({cache_key[:8]}...)")
+                return cached
+
+        # Fetch from API
+        data = self._request(url)
+
+        # Save to cache
+        if self.use_cache:
+            self._save_cache(cache_key, data)
+
+        return data
+
+    def _cache_key(self, file_key: str, depth: int | None, node_ids: list[str] | None) -> str:
+        """Generate a cache key for this request."""
+        parts = [file_key, str(depth or "full")]
+        if node_ids:
+            parts.extend(sorted(node_ids))
+        key_str = ":".join(parts)
+        return hashlib.md5(key_str.encode()).hexdigest()
+
+    def _cache_path(self, cache_key: str) -> Path:
+        """Get the cache file path for a key."""
+        return FIGMA_CACHE_DIR / f"{cache_key}.json"
+
+    def _load_cache(self, cache_key: str) -> dict[str, Any] | None:
+        """Load data from cache if valid."""
+        import time
+
+        cache_file = self._cache_path(cache_key)
+        if not cache_file.exists():
+            return None
+
+        # Check TTL
+        age = time.time() - cache_file.stat().st_mtime
+        if age > self.cache_ttl:
+            return None
+
+        try:
+            return json.loads(cache_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, IOError):
+            return None
+
+    def _save_cache(self, cache_key: str, data: dict[str, Any]) -> None:
+        """Save data to cache."""
+        cache_file = self._cache_path(cache_key)
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        cache_file.write_text(json.dumps(data), encoding="utf-8")
 
     def get_node(self, file_key: str, node_id: str) -> dict[str, Any]:
         """Fetch a specific node from a Figma file.
@@ -103,17 +167,32 @@ class FigmaClient:
         url = f"{FIGMA_API_BASE}/files/{file_key}/nodes?ids={node_id}"
         return self._request(url)
 
-    def _request(self, url: str) -> dict[str, Any]:
-        """Make an authenticated request to the Figma API."""
+    def _request(self, url: str, retries: int = 3) -> dict[str, Any]:
+        """Make an authenticated request to the Figma API with retry on rate limit."""
+        import time
+
         req = Request(url)
         req.add_header("X-Figma-Token", self.token or "")
 
-        try:
-            with urlopen(req, timeout=30) as response:
-                return json.loads(response.read().decode("utf-8"))
-        except HTTPError as e:
-            body = e.read().decode("utf-8") if e.fp else str(e)
-            raise FigmaAPIError(e.code, body) from e
+        last_error = None
+        for attempt in range(retries):
+            try:
+                with urlopen(req, timeout=30) as response:
+                    return json.loads(response.read().decode("utf-8"))
+            except HTTPError as e:
+                body = e.read().decode("utf-8") if e.fp else str(e)
+                last_error = FigmaAPIError(e.code, body)
+
+                # Retry on rate limit (429) with exponential backoff
+                if e.code == 429 and attempt < retries - 1:
+                    wait_time = (2 ** attempt) * 10  # 10s, 20s, 40s
+                    print(f"Rate limited, waiting {wait_time}s... (attempt {attempt + 1}/{retries})")
+                    time.sleep(wait_time)
+                    continue
+
+                raise last_error from e
+
+        raise last_error  # type: ignore
 
 
 def extract_file_key(url_or_key: str) -> str:
@@ -150,7 +229,11 @@ def figma_to_ophanic(
         options = FigmaOptions()
 
     file_key = extract_file_key(file_key_or_url)
-    client = FigmaClient(token=options.token)
+    client = FigmaClient(
+        token=options.token,
+        use_cache=options.use_cache,
+        cache_ttl=options.cache_ttl,
+    )
 
     # Fetch the file
     file_data = client.get_file(
@@ -182,7 +265,12 @@ def figma_to_diagram(
 
     doc = figma_to_ophanic(file_key_or_url, options)
 
-    reverse_options = ReverseOptions(diagram_width=options.diagram_width)
+    # Use depth for diagram nesting limit (default to 4 for deeper structure)
+    max_depth = options.depth if options.depth else 4
+    reverse_options = ReverseOptions(
+        diagram_width=options.diagram_width,
+        max_nesting_depth=max_depth,
+    )
     generator = DiagramGenerator(reverse_options)
     return generator.generate(doc)
 
@@ -199,6 +287,11 @@ class FigmaConverter:
     def __init__(self, options: FigmaOptions):
         self.options = options
         self.components: dict[str, dict] = {}  # componentId -> component node
+        # Token extraction
+        self._colors: dict[str, ColorToken] = {}  # hex -> ColorToken
+        self._typography: dict[str, TypographyToken] = {}  # key -> TypographyToken
+        self._color_counter = 0
+        self._typo_counter = 0
 
     def convert(self, file_data: dict[str, Any]) -> OphanicDocument:
         """Convert Figma file data to OphanicDocument."""
@@ -222,7 +315,8 @@ class FigmaConverter:
 
         # Process each page
         for page in pages:
-            page_name = page.get("name", "Page")
+            # Extract design tokens from this page
+            self._extract_tokens(page)
 
             # Get top-level frames from the page
             for child in page.get("children", []):
@@ -235,6 +329,9 @@ class FigmaConverter:
                             BreakpointLayout(breakpoint=bp_name, root=layout)
                         )
 
+        # Attach extracted tokens
+        doc.tokens = self._build_tokens()
+
         return doc
 
     def _convert_node(self, node: dict[str, Any]) -> LayoutNode | None:
@@ -245,10 +342,22 @@ class FigmaConverter:
         if node_type in self.SKIP_TYPES:
             return None
 
-        # Handle component instances
+        # Handle component instances - drill into their children for structure
         if node_type == "INSTANCE":
             component_id = node.get("componentId")
             component_name = self._get_component_name(component_id, node)
+
+            # If instance has children, process them for actual content
+            children = node.get("children", [])
+            if children:
+                # Treat instance like a container but with component name prefix
+                container = self._convert_container(node)
+                if container.children:
+                    # Add component name as context
+                    container.name = component_name
+                    return container
+
+            # No children - just reference the component
             return LayoutNode(
                 type=NodeType.COMPONENT_REF,
                 name=component_name,
@@ -324,6 +433,11 @@ class FigmaConverter:
                     type=NodeType.LABEL,
                     name=self._truncate(name, 30),
                 )
+
+        # Check if this container is actually a table
+        table_node = self._detect_table(node, container)
+        if table_node:
+            return table_node
 
         return container
 
@@ -401,6 +515,118 @@ class FigmaConverter:
                                 value=child.height_proportion.value / total,
                                 char_count=int(child.height_proportion.value),
                             )
+
+    def _detect_table(
+        self,
+        node: dict[str, Any],
+        container: LayoutNode,
+    ) -> LayoutNode | None:
+        """Detect if a container is a table and convert it.
+
+        A container is considered a table if:
+        - It's a column layout with multiple row children
+        - Each row has similar structure (same number of children)
+        - The name contains 'table', 'grid', or 'list'
+        """
+        name = node.get("name", "").lower()
+        children = node.get("children", [])
+
+        # Quick heuristic checks
+        is_table_name = any(
+            keyword in name
+            for keyword in ("table", "grid", "list", "data", "schedule", "pricing")
+        )
+
+        # Must be a column layout with at least 2 rows
+        if container.direction != Direction.COLUMN or len(children) < 2:
+            if not is_table_name:
+                return None
+
+        # Check if children have consistent structure (same number of grandchildren)
+        row_widths = []
+        row_data: list[list[str]] = []
+
+        for child in children:
+            grandchildren = child.get("children", [])
+
+            # Row must have children (cells)
+            if not grandchildren:
+                # Check if it's a single-cell row (text content)
+                if child.get("type") == "TEXT":
+                    row_data.append([child.get("characters", "").strip()])
+                    row_widths.append(1)
+                    continue
+                # Skip rows with no content
+                continue
+
+            # Check for horizontal layout (row)
+            row_layout = child.get("layoutMode", "")
+            if row_layout != "HORIZONTAL" and not is_table_name:
+                # Not a row layout and not explicitly named as table
+                return None
+
+            # Extract cell content
+            cells = []
+            for cell in grandchildren:
+                cell_text = self._extract_cell_text(cell)
+                cells.append(cell_text)
+
+            row_data.append(cells)
+            row_widths.append(len(cells))
+
+        # Need at least 2 rows with consistent column count
+        if len(row_data) < 2:
+            return None
+
+        # Check if column counts are consistent (allow some variance for merged cells)
+        if row_widths:
+            most_common_width = max(set(row_widths), key=row_widths.count)
+            consistent_rows = sum(1 for w in row_widths if w == most_common_width)
+            if consistent_rows < len(row_widths) * 0.6:  # At least 60% consistent
+                if not is_table_name:
+                    return None
+
+        # Build table data
+        table_data = TableData()
+
+        # First row is header if it has different styling (we assume yes for now)
+        for i, cells in enumerate(row_data):
+            is_header = i == 0
+            table_row = TableRow(is_header_row=is_header)
+            for cell_text in cells:
+                table_row.cells.append(TableCell(
+                    content=cell_text,
+                    is_header=is_header,
+                ))
+            table_data.rows.append(table_row)
+
+        return LayoutNode(
+            type=NodeType.TABLE,
+            name=node.get("name", "Table"),
+            table_data=table_data,
+        )
+
+    def _extract_cell_text(self, cell: dict[str, Any]) -> str:
+        """Extract text content from a table cell node."""
+        # If it's a text node, get characters directly
+        if cell.get("type") == "TEXT":
+            return cell.get("characters", "").strip()
+
+        # If it's a container, look for text children
+        for child in cell.get("children", []):
+            if child.get("type") == "TEXT":
+                return child.get("characters", "").strip()
+            # Recurse one level
+            for grandchild in child.get("children", []):
+                if grandchild.get("type") == "TEXT":
+                    return grandchild.get("characters", "").strip()
+
+        # Fall back to node name
+        name = cell.get("name", "")
+        if name and not self._is_generic_name(name):
+            return name
+
+        return ""
 
     def _infer_direction(self, node: dict[str, Any]) -> Direction | None:
         """Infer layout direction from children positions when no auto-layout."""
@@ -486,3 +712,170 @@ class FigmaConverter:
         if last_space > truncate_at // 2:
             return text[:last_space] + "..."
         return text[:truncate_at] + "..."
+
+    # ========== Token Extraction ==========
+
+    def _extract_tokens(self, node: dict[str, Any]) -> None:
+        """Extract color and typography tokens from a node recursively."""
+        # Extract colors from fills
+        fills = node.get("fills", [])
+        for fill in fills:
+            if fill.get("type") == "SOLID" and fill.get("visible", True):
+                self._extract_color(fill.get("color", {}), fill.get("opacity", 1.0))
+
+        # Extract colors from strokes
+        strokes = node.get("strokes", [])
+        for stroke in strokes:
+            if stroke.get("type") == "SOLID" and stroke.get("visible", True):
+                self._extract_color(stroke.get("color", {}), stroke.get("opacity", 1.0))
+
+        # Extract typography from TEXT nodes
+        if node.get("type") == "TEXT":
+            self._extract_typography(node)
+
+        # Extract from background color
+        bg = node.get("backgroundColor")
+        if bg:
+            self._extract_color(bg, bg.get("a", 1.0))
+
+        # Recurse into children
+        for child in node.get("children", []):
+            self._extract_tokens(child)
+
+    def _extract_color(self, color: dict[str, Any], opacity: float = 1.0) -> None:
+        """Extract a color token from Figma color object."""
+        if not color:
+            return
+
+        r = int(color.get("r", 0) * 255)
+        g = int(color.get("g", 0) * 255)
+        b = int(color.get("b", 0) * 255)
+        a = color.get("a", 1.0) * opacity
+
+        # Generate hex
+        if a < 1.0:
+            hex_color = f"#{r:02x}{g:02x}{b:02x}{int(a * 255):02x}"
+        else:
+            hex_color = f"#{r:02x}{g:02x}{b:02x}"
+
+        # Skip if already seen
+        hex_key = hex_color.lower()
+        if hex_key in self._colors:
+            return
+
+        # Generate a name based on color characteristics
+        name = self._generate_color_name(r, g, b, a)
+
+        self._colors[hex_key] = ColorToken(
+            name=name,
+            hex=hex_color,
+            rgba=(r, g, b, a),
+        )
+
+    def _generate_color_name(self, r: int, g: int, b: int, a: float) -> str:
+        """Generate a semantic name for a color."""
+        # Check for common colors
+        if r == g == b:
+            if r < 30:
+                return "black" if "black" not in self._colors else f"gray-{self._color_counter}"
+            if r > 225:
+                return "white" if "white" not in self._colors else f"gray-light-{self._color_counter}"
+            # Gray scale
+            level = r // 25  # 0-10 scale
+            name = f"gray-{level * 100}"
+            if name in [c.name for c in self._colors.values()]:
+                self._color_counter += 1
+                name = f"gray-{self._color_counter}"
+            return name
+
+        # Determine dominant color
+        max_channel = max(r, g, b)
+        if r == max_channel and r > g + 30 and r > b + 30:
+            base = "red"
+        elif g == max_channel and g > r + 30 and g > b + 30:
+            base = "green"
+        elif b == max_channel and b > r + 30 and b > g + 30:
+            base = "blue"
+        elif r > 200 and g > 200 and b < 100:
+            base = "yellow"
+        elif r > 200 and g < 150 and b > 200:
+            base = "purple"
+        elif r < 100 and g > 200 and b > 200:
+            base = "cyan"
+        elif r > 200 and g > 100 and b < 100:
+            base = "orange"
+        else:
+            self._color_counter += 1
+            return f"color-{self._color_counter}"
+
+        # Check if base name exists
+        if base in [c.name for c in self._colors.values()]:
+            self._color_counter += 1
+            return f"{base}-{self._color_counter}"
+        return base
+
+    def _extract_typography(self, node: dict[str, Any]) -> None:
+        """Extract typography token from a TEXT node."""
+        style = node.get("style", {})
+        if not style:
+            return
+
+        font_family = style.get("fontFamily", "Inter")
+        font_size = style.get("fontSize", 16)
+        font_weight = style.get("fontWeight", 400)
+        line_height_px = style.get("lineHeightPx")
+        letter_spacing = style.get("letterSpacing", 0)
+
+        # Create a key for deduplication
+        key = f"{font_family}-{font_size}-{font_weight}"
+        if key in self._typography:
+            return
+
+        # Generate name based on size
+        if font_size >= 32:
+            name = "display"
+        elif font_size >= 24:
+            name = "heading"
+        elif font_size >= 20:
+            name = "title"
+        elif font_size >= 16:
+            name = "body"
+        elif font_size >= 14:
+            name = "label"
+        else:
+            name = "caption"
+
+        # Make unique if needed
+        if name in [t.name for t in self._typography.values()]:
+            self._typo_counter += 1
+            name = f"{name}-{self._typo_counter}"
+
+        # Format line height
+        line_height = None
+        if line_height_px and font_size > 0:
+            ratio = line_height_px / font_size
+            line_height = f"{ratio:.2f}".rstrip("0").rstrip(".")
+
+        # Format letter spacing
+        letter_spacing_str = None
+        if letter_spacing and letter_spacing != 0:
+            letter_spacing_str = f"{letter_spacing / font_size:.3f}em"
+
+        self._typography[key] = TypographyToken(
+            name=name,
+            font_family=font_family,
+            font_size=f"{int(font_size)}px",
+            font_weight=font_weight,
+            line_height=line_height,
+            letter_spacing=letter_spacing_str,
+        )
+
+    def _build_tokens(self) -> DesignTokens | None:
+        """Build DesignTokens from extracted data."""
+        if not self._colors and not self._typography:
+            return None
+
+        return DesignTokens(
+            colors=list(self._colors.values()),
+            typography=list(self._typography.values()),
+        )
