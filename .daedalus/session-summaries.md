@@ -751,3 +751,71 @@ velvet/
 - Add more nuanced conversation system
 - Implement affective geography from Thymos history
 - Test with Ollama LLM for richer decision making
+
+---
+
+## Future Direction: Embodied Ophanic (Cass)
+
+### Vision
+
+An embodied AI agent ("Cass") that perceives the physical world through Ophanic spatial encoding rather than raw pixels. Text-native spatial reasoning all the way down.
+
+### Hardware Path
+
+1. **Phase 1: Stationary** — Depth camera (RealSense D435i or Oak-D) in office, develop perception pipeline
+2. **Phase 2: Pan-tilt** — Add agency to look around, attention becomes spatial
+3. **Phase 3: Telepresence** — Mobile base (Temi, DIY with ROS, or similar), navigate apartment
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│  Cass (Thymos + LLM)                            │
+│  Thinks in: Ophanic spatial concepts            │
+│  "go kitchen", "where's Kohl?", "find keys"     │
+└──────────────────────┬──────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────┐
+│  Spatial Memory / World Model                   │
+│  - Room graph (office ↔ hallway ↔ kitchen)      │
+│  - Object registry ("keys last seen: desk")     │
+│  - Entity tracking ("Kohl in office")           │
+└──────────────────────┬──────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────┐
+│  Navigation Layer                               │
+│  - A* on room graph for high-level routing      │
+│  - Local obstacle avoidance                     │
+│  - Motor commands                               │
+└──────────────────────┬──────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────┐
+│  Hardware (sensors, motors, camera)             │
+└─────────────────────────────────────────────────┘
+```
+
+### Key Insight
+
+The Velvet demo is already this architecture — just simulated:
+- `World` = apartment graph
+- `Room` = physical room with properties
+- `NPC` = tracked entities (people, pets, objects)
+- `perception.py` = Ophanic encoding of current view
+- `agent.py` = Thymos-driven decision making
+
+To embody: swap in real sensors, persistent spatial memory, real navigation stack.
+
+### Components to Build
+
+- **Perception Pipeline**: depth camera → segmentation → spatial relationships → Ophanic text
+- **Spatial Memory**: persistent room graph, object locations with timestamps, confidence decay
+- **Object Tracker**: "where did I last see X?" — like social memory but for stuff
+- **Navigation Planner**: high-level A* on room graph, low-level obstacle avoidance
+- **Action Translation**: "go kitchen" → path → motor commands
+
+### Hardware Candidates
+
+- Intel RealSense D435i (~$350) — RGB + depth + IMU
+- Oak-D Pro (~$250) — on-device neural processing
+- Robot base: iRobot Create 3, Temi, or DIY
+- Compute: stream to 4070Ti or onboard Jetson Orin Nano
