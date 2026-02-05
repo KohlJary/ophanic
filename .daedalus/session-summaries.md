@@ -514,3 +514,65 @@ All three use the same design principle: dual readability, text-native encoding,
 This isn't hypothetical capability expansion. It's building scaffolding for genuine agency — behavior that originates from self-assessed condition rather than external instruction alone. Homeostatic self-maintenance as the basis for caring about anything.
 
 The theoretical architecture is solid. The pieces are well-defined. Now it's engineering.
+
+---
+
+## 2026-02-05: Thymos Phase 1 Complete
+
+### What was done
+
+Implemented the core Thymos architecture as specified in `doc/thymos-SPEC.md`:
+
+1. **Data Models** (`thymos/models.py`)
+   - `AffectVector`: 10 continuous dimensions (curiosity, determination, anxiety, satisfaction, frustration, tenderness, grief, playfulness, awe, fatigue)
+   - `Need`: current value, threshold, preferred range, decay rate, satiation curve
+   - `NeedsRegister`: 7 needs (cognitive_rest, social_connection, novelty_intake, creative_expression, value_coherence, competence_signal, autonomy)
+   - `ThymosState`: complete snapshot with serialization support
+   - `Goal`: self-generated goals from need deficits
+
+2. **Dynamics** (`thymos/dynamics.py`)
+   - Time-based need decay with configurable rates
+   - Bidirectional affect-need coupling (low novelty → frustration up, high anxiety → rest depletes faster, etc.)
+   - Goal generation when needs cross thresholds
+   - `simulate()` for multi-step time advancement
+
+3. **Summarizer** (`thymos/summarizer.py`)
+   - Template mode: fast, deterministic, works offline
+   - Ollama LLM mode: natural prose via local models (tested with llama3.1:8b, qwen2.5:14b)
+   - Positive/negative affect categorization for contrast detection
+   - Display formatters (affect bars, needs table, felt-state box)
+
+4. **Serialization** (`thymos/serialization.py`)
+   - JSON and base64 compact formats
+   - Lossless state rehydration
+   - State comparison with delta calculation
+   - Visual comparison rendering
+
+5. **Demo** (`thymos/demo.py`)
+   - Interactive terminal walkthrough
+   - Shows initial state → decay → replenishment → affect adjustment → LLM summarization → comparison
+   - Run with: `python -m thymos.demo`
+
+6. **Tests** (`thymos/tests/test_thymos.py`)
+   - 35 passing tests covering all components
+   - Integration test for full create → tick → summarize → serialize cycle
+
+### Key design decisions
+
+- Affects are 0.0-1.0 continuous, not categorical labels
+- Multiple affects always active simultaneously
+- Needs have satiation curves (diminishing returns at high values)
+- Coupling is bidirectional but asymmetric (different effects in each direction)
+- Template summarizer detects positive/negative contrast for natural phrasing
+- LLM summarizer falls back to template if Ollama unavailable
+
+### Phase 1 roadmap item: COMPLETE
+
+```
+✓ Affect vector and needs register data structures
+✓ Decay dynamics and affect-need coupling
+✓ Felt state summarizer
+✓ Serialization/rehydration format
+```
+
+### Next: Phase 2 — Social Memory
