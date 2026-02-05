@@ -333,3 +333,95 @@ max_nesting_depth: int = 2
 1. Fix box corner alignment in `_generate_column` (low priority)
 2. Regenerate all admin-frontend layouts with new settings
 3. Update PARSER_ISSUES.md with resolution status
+
+---
+
+## 2026-02-05: Figma Import Adapter (Phase 4) Complete
+
+### What was done
+
+Built complete Figma import adapter to convert Figma designs to Ophanic diagrams:
+
+1. **FigmaClient** (`ophanic/adapters/figma.py`)
+   - REST API wrapper with Personal Access Token auth
+   - File fetching with optional node/page filtering
+   - Error handling for 404s and auth failures
+
+2. **FigmaConverter** - transforms Figma nodes to Ophanic IR:
+   - Auto-layout → row/column direction
+   - `layoutGrow` and `FILL` sizing → proportions
+   - Component instances → `◆ComponentName` labels
+   - Text nodes → labels
+   - Recursive frame/group traversal
+
+3. **CLI command**: `ophanic figma <url-or-file-key>`
+   ```bash
+   ophanic figma https://www.figma.com/design/abc123/... --width 80 --depth 2
+   ophanic figma abc123 --page "Page 2" --node "Frame 1"
+   ```
+
+4. **Helper functions**:
+   - `extract_file_key()` - extracts key from various Figma URL formats
+   - `figma_to_ophanic()` - full conversion pipeline
+   - `figma_to_diagram()` - direct to ASCII diagram
+
+### End-to-End Pipeline Verified
+
+Full Figma → Ophanic → React workflow tested:
+
+```bash
+# Export from Figma
+ophanic figma https://www.figma.com/design/.../Dashboard-Design-Template...
+
+# Result: dashboard.oph with multiple screens
+@dashboard
+┌────────────────────────────────────────────────────────────────────────────┐
+│┌──────────────────────┐ ┌────────────────────────┐ ┌──────────────────────┐│
+││ Mask Group           │ │ ◆Side bar              │ │ ◆Property 1=Variant3 ││
+│└──────────────────────┘ └────────────────────────┘ └──────────────────────┘│
+└────────────────────────────────────────────────────────────────────────────┘
+
+@cost-analysis
+┌────────────────────────────────────────────────────────────────────────────┐
+│┌──────────────────────────────────────────────────────────────────────────┐│
+││ ◆Side bar                                                                ││
+│└──────────────────────────────────────────────────────────────────────────┘│
+│┌──────────────────────────────────────────────────────────────────────────┐│
+││ Statistics                                                               ││
+│└──────────────────────────────────────────────────────────────────────────┘│
+└────────────────────────────────────────────────────────────────────────────┘
+
+# Generate React from diagram
+ophanic generate dashboard.oph --target react
+```
+
+### Tested With
+
+- Dashboard Design Template (Community) - 12 screens with components
+- Various auto-layout configurations (horizontal, vertical, nested)
+- Component instances (Side bar, Property variants)
+
+### Files Created/Modified
+
+- `ophanic/adapters/figma.py` - NEW (FigmaClient, FigmaConverter)
+- `ophanic/adapters/__init__.py` - added figma exports
+- `ophanic/cli.py` - added `figma` command
+
+### All 4 Phases Complete
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Parser - `.oph` → IR | ✅ |
+| 2 | React Adapter - IR → React/Tailwind | ✅ |
+| 3 | Reverse Adapter - React → `.oph` | ✅ |
+| 4 | Figma Import - Figma → `.oph` | ✅ |
+
+### Known Issue
+
+Box corner alignment in `_generate_column`: Some boxes show `┌────│` instead of `┌────┐` when widths don't perfectly align. Low priority cosmetic issue.
+
+### Next Steps
+
+1. Fix box corner alignment bug (low priority)
+2. Consider Figma component library extraction
+3. Explore bidirectional Figma sync (export changes back)
