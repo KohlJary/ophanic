@@ -21,6 +21,10 @@ class ActionType(Enum):
     OBSERVE = "observe"
     REST = "rest"
     CREATE = "create"
+    REFLECT = "reflect"
+    HELP = "help"
+    EXPLORE = "explore"
+    PERFORM = "perform"
 
 
 @dataclass
@@ -65,8 +69,17 @@ def parse_action(action_str: str) -> tuple[ActionType, list[str]] | None:
         "relax": ActionType.REST,
         "sit": ActionType.REST,
         "create": ActionType.CREATE,
-        "play": ActionType.CREATE,
-        "dance": ActionType.CREATE,
+        # New actions
+        "reflect": ActionType.REFLECT,
+        "think": ActionType.REFLECT,
+        "meditate": ActionType.REFLECT,
+        "help": ActionType.HELP,
+        "assist": ActionType.HELP,
+        "explore": ActionType.EXPLORE,
+        "wander": ActionType.EXPLORE,
+        "perform": ActionType.PERFORM,
+        "dance": ActionType.PERFORM,
+        "play": ActionType.PERFORM,
     }
 
     if action_word in action_map:
@@ -95,6 +108,14 @@ def execute_action(
         return _execute_rest(current_room)
     elif action_type == ActionType.CREATE:
         return _execute_create(current_room, npcs_in_room)
+    elif action_type == ActionType.REFLECT:
+        return _execute_reflect(current_room)
+    elif action_type == ActionType.HELP:
+        return _execute_help(args, npcs_in_room)
+    elif action_type == ActionType.EXPLORE:
+        return _execute_explore(current_room, world)
+    elif action_type == ActionType.PERFORM:
+        return _execute_perform(current_room)
     else:
         return ActionResult(
             success=False,
@@ -330,6 +351,192 @@ def _execute_create(
     )
 
 
+def _execute_reflect(current_room: Room) -> ActionResult:
+    """
+    Take time to reflect and check in with yourself.
+
+    Boosts value_coherence and cognitive_rest.
+    More effective in quiet, intimate spaces.
+    """
+    # Reflection works better in quiet spaces
+    quiet_bonus = (1 - current_room.noise_level) * 0.1
+    intimate_bonus = current_room.intimacy * 0.1
+
+    value_gain = 0.15 + quiet_bonus + intimate_bonus
+    rest_gain = 0.1 + quiet_bonus
+
+    reflections = [
+        "You pause, letting your thoughts settle into clarity.",
+        "A moment of stillness. You check in with what matters.",
+        "You breathe. Remember why you're here.",
+        "In the quiet of your mind, things realign.",
+    ]
+
+    if current_room.noise_level > 0.7:
+        return ActionResult(
+            success=True,
+            message="Hard to reflect with all this noise, but you try to center yourself.",
+            thymos_deltas={
+                "value_coherence": value_gain * 0.5,
+                "cognitive_rest": rest_gain * 0.5,
+            },
+            affect_deltas={"anxiety": -0.03},
+        )
+
+    return ActionResult(
+        success=True,
+        message=random.choice(reflections),
+        thymos_deltas={
+            "value_coherence": value_gain,
+            "cognitive_rest": rest_gain,
+        },
+        affect_deltas={
+            "anxiety": -0.05,
+            "satisfaction": 0.05,
+        },
+    )
+
+
+def _execute_help(args: list[str], npcs_in_room: list["NPC"]) -> ActionResult:
+    """
+    Offer help or assistance to someone.
+
+    Boosts competence_signal, social_connection, and value_coherence.
+    Requires an NPC to help.
+    """
+    if not npcs_in_room:
+        return ActionResult(
+            success=False,
+            message="There's no one here who needs help.",
+            thymos_deltas={},
+            affect_deltas={},
+        )
+
+    # Find target NPC
+    target = None
+    if args:
+        target_name = args[0].lower()
+        for npc in npcs_in_room:
+            if target_name in npc.name.lower() or target_name == npc.slug:
+                target = npc
+                break
+
+    if not target:
+        # Pick someone who might need help (lower openness = more reserved)
+        candidates = sorted(npcs_in_room, key=lambda n: n.openness)
+        target = candidates[0]
+
+    # Different responses based on NPC traits
+    if "new" in target.traits or "quiet" in target.traits:
+        message = f"You offer {target.name} a kind word. They seem to appreciate the gesture."
+        social_boost = 0.15
+    elif "cautious" in target.traits:
+        message = f"{target.name} accepts your help cautiously, but warmly."
+        social_boost = 0.1
+    else:
+        message = f"You check in with {target.name}. Small kindnesses matter."
+        social_boost = 0.1
+
+    return ActionResult(
+        success=True,
+        message=message,
+        thymos_deltas={
+            "competence_signal": 0.2,
+            "social_connection": social_boost,
+            "value_coherence": 0.1,
+        },
+        affect_deltas={
+            "satisfaction": 0.1,
+            "tenderness": 0.05,
+        },
+    )
+
+
+def _execute_explore(current_room: Room, world: "World") -> ActionResult:
+    """
+    Deliberately explore and discover something new.
+
+    Boosts autonomy and novelty_intake.
+    Different from passive observation - this is intentional discovery.
+    """
+    novelty_gain = current_room.novelty_potential * 0.2
+    autonomy_gain = 0.15  # Deliberate choice boosts autonomy
+
+    discoveries = [
+        "You notice something you hadn't seen before.",
+        "Following your curiosity leads somewhere unexpected.",
+        "You choose to look deeper. There's always more to find.",
+        "Deliberately wandering, you discover a new perspective.",
+    ]
+
+    # Extra discovery in high-novelty rooms
+    if current_room.novelty_potential > 0.6:
+        discoveries.extend([
+            "This place rewards attention. You find hidden details.",
+            "The more you look, the more reveals itself.",
+        ])
+        novelty_gain += 0.05
+
+    return ActionResult(
+        success=True,
+        message=random.choice(discoveries),
+        thymos_deltas={
+            "autonomy": autonomy_gain,
+            "novelty_intake": novelty_gain,
+        },
+        affect_deltas={
+            "curiosity": 0.1,
+            "satisfaction": 0.05,
+        },
+    )
+
+
+def _execute_perform(current_room: Room) -> ActionResult:
+    """
+    Express yourself through performance - dance, music, movement.
+
+    Boosts creative_expression and autonomy.
+    Works best on stage or dance floor.
+    """
+    # Check if this is a performance-friendly space
+    good_spaces = {"ground.stage", "ground.dance"}
+    is_performance_space = current_room.id in good_spaces
+
+    if not is_performance_space and current_room.creative_energy < 0.5:
+        return ActionResult(
+            success=False,
+            message="This doesn't feel like the right space for that.",
+            thymos_deltas={},
+            affect_deltas={},
+        )
+
+    creative_gain = 0.2
+    autonomy_gain = 0.15
+
+    if current_room.id == "ground.stage":
+        message = "You let the music move through you. For a moment, you're part of the performance."
+        creative_gain += 0.1
+    elif current_room.id == "ground.dance":
+        message = "You lose yourself in movement. The crowd becomes a single pulse."
+        creative_gain += 0.05
+        autonomy_gain += 0.05
+    else:
+        message = "You express yourself freely. It feels right."
+
+    return ActionResult(
+        success=True,
+        message=message,
+        thymos_deltas={
+            "creative_expression": creative_gain,
+            "autonomy": autonomy_gain,
+        },
+        affect_deltas={
+            "satisfaction": 0.1,
+            "playfulness": 0.1,
+        },
+    )
+
+
 def apply_thymos_deltas(
     state: "ThymosState",
     need_deltas: dict[str, float],
@@ -390,16 +597,24 @@ def get_available_actions(
         room_name = room_id.split(".")[-1] if "." in room_id else room_id
         actions.append(f"move {direction} (to {room_name})")
 
-    # NPCs
+    # NPCs - talk and help
     for npc in npcs_in_room:
         actions.append(f"talk {npc.name.lower()}")
+    if npcs_in_room:
+        actions.append("help")  # Can help anyone present
 
     # Always available
     actions.append("observe")
     actions.append("rest")
+    actions.append("reflect")
+    actions.append("explore")
 
-    # Conditional
+    # Conditional - creative activities
     if current_room.creative_energy > 0.4:
         actions.append("create")
+
+    # Performance spaces
+    if current_room.id in {"ground.stage", "ground.dance"} or current_room.creative_energy > 0.5:
+        actions.append("perform")
 
     return actions

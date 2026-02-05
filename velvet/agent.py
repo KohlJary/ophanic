@@ -70,10 +70,20 @@ def build_decision_prompt(
 
     recent = agent.action_history[-5:] if agent.action_history else ["(just arrived)"]
 
-    # Add hint about moving to find people
-    movement_hint = ""
+    # Add contextual hints based on goals
+    hints = []
     if not npcs_in_room and any("dialogue" in g.lower() or "social" in g.lower() for g in goals):
-        movement_hint = "\nNote: No one is here. Move to another room to find people to talk to."
+        hints.append("No one is here. MOVE to find people.")
+    if any("initiative" in g.lower() or "self-directed" in g.lower() for g in goals):
+        hints.append("For autonomy: try EXPLORE or PERFORM.")
+    if any("successful" in g.lower() or "achievable" in g.lower() for g in goals):
+        hints.append("For competence: try HELP someone.")
+    if any("alignment" in g.lower() or "value" in g.lower() for g in goals):
+        hints.append("For alignment: try REFLECT in a quiet space.")
+    if any("creative" in g.lower() or "expression" in g.lower() for g in goals):
+        hints.append("For creativity: try PERFORM or CREATE.")
+
+    hints_str = "\n".join(f"Hint: {h}" for h in hints[:2])  # Max 2 hints
 
     prompt = f"""You are navigating The Velvet, a social venue at night.
 
@@ -93,11 +103,12 @@ def build_decision_prompt(
 {chr(10).join(f"- {a}" for a in recent)}
 
 ## NPCs Present
-{_format_npcs(npcs_in_room)}{movement_hint}
+{_format_npcs(npcs_in_room)}
+
+{hints_str}
 
 What do you do? Pick ONE action from the list above.
-Respond with ONLY the action command (e.g., "move east" or "talk dove").
-If you have social goals but no one is around, MOVE to find people."""
+Respond with ONLY the action command (e.g., "move east", "talk dove", "perform", "help")."""
 
     return prompt
 
