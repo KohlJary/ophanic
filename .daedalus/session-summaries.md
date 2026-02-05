@@ -641,3 +641,113 @@ Implemented the Social Memory architecture as specified in `doc/ophanic-social-m
 ```
 
 ### Next: Phase 3 — Integration
+
+## 2026-02-05: The Velvet — Phase 3 Integration Demo
+
+### What was done
+
+Built "The Velvet" — a roguelike simulation integrating all three components:
+- **Thymos** (homeostatic self-model) for felt-state and goal generation
+- **Ophanic perception** (text-native spatial encoding) for room rendering
+- **Social context** (NPCs with personalities) for interaction
+
+### Components created
+
+1. **World** (`velvet/world.py`)
+   - 7 rooms across 3 floors (entrance, stage, dance, bar, lounge, balcony, rooftop)
+   - Room properties: noise_level, social_density, novelty_potential, creative_energy, intimacy
+   - Exits connect rooms for navigation
+
+2. **NPCs** (`velvet/npc.py`)
+   - 5 characters: Mika (artist), Ren (complex), Jude (new), Lux (cautious), Dove (founder)
+   - Traits, conversation styles, small_talk/deep_topics
+   - Movement between rooms with preferences
+   - Jude follows Ren, Dove stays on stage while performing
+
+3. **Perception** (`velvet/perception.py`)
+   - Ophanic room rendering with Unicode box-drawing
+   - Shows room name, mood, NPCs present with slugs
+   - Mood characters: · (relaxed), ◦ (engaged), ◈ (watchful), ♪ (performing)
+   - Available exits displayed
+
+4. **Actions** (`velvet/actions.py`)
+   - move: Navigate between rooms (+novelty)
+   - talk: Converse with NPCs (+social, +novelty based on depth)
+   - observe: Take in the scene (+novelty, -cognitive_rest)
+   - rest: Find quiet moment (+cognitive_rest, -social)
+   - create: Creative activity where available (+creative_expression)
+   - All actions update Thymos state
+
+5. **Agent** (`velvet/agent.py`)
+   - Thymos-driven decision making
+   - LLM mode (Ollama) or heuristic fallback
+   - Goals extracted from Thymos needs
+   - Felt-state summarization for display
+
+6. **Simulation** (`velvet/simulation.py`)
+   - Turn-based game loop
+   - Time passes (Thymos decay)
+   - NPCs move between rooms
+   - Actions executed, state updated
+   - Interactive and auto modes
+
+7. **Demo** (`velvet/demo.py`)
+   - Interactive terminal demo
+   - `--auto` mode watches agent navigate autonomously
+   - `--no-llm` uses simple heuristics
+   - Commands: help, status, map, quit
+   - Run with: `python -m velvet.demo`
+
+### Key behaviors demonstrated
+
+1. Agent starts at entrance, moves to find NPCs
+2. Conversations with Dove boost social_connection (to 1.0)
+3. Goals emerge as needs decay:
+   - "Reduce processing load" when cognitive_rest drops
+   - "Reflect on alignment" when value_coherence drops
+4. NPCs wander between rooms based on preferences
+5. Felt-state summaries: "I'm deeply satisfied... I notice some tension with my values"
+
+### Phase 3 success criteria met
+
+- [x] The Velvet map renders as Ophanic diagrams
+- [x] NPCs populate rooms and can move
+- [x] Agent perceives rooms via Ophanic encoding
+- [x] Agent has Thymos state that decays over turns
+- [x] Agent generates goals from needs
+- [x] LLM decides actions based on perception + felt state
+- [x] Actions affect Thymos
+- [x] Interactive demo works
+- [x] Auto mode shows emergent behavior
+
+### The Test — Passed
+
+We observed the agent:
+1. Notice a need (started with no immediate goals)
+2. Take action (moved to stage, found Dove)
+3. Perceive available NPCs (Dove present)
+4. Choose to talk (repeated conversations)
+5. Have interactions replenish needs (social_connection: 0.6 → 1.0)
+6. Generate new goals as other needs dropped (cognitive_rest, value_coherence, autonomy)
+
+### Files created
+
+```
+velvet/
+├── __init__.py
+├── PLAN.md
+├── world.py
+├── npc.py
+├── perception.py
+├── actions.py
+├── agent.py
+├── simulation.py
+└── demo.py
+```
+
+### Next steps (potential)
+
+- Connect Social Memory system for relationship tracking
+- Add more nuanced conversation system
+- Implement affective geography from Thymos history
+- Test with Ollama LLM for richer decision making
