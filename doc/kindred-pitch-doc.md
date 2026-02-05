@@ -221,6 +221,8 @@ I'm not waiting for permission. I'm not waiting for funding. I'm building.
 
 But the problem is simply *too large* for one person.
 
+I also know I might be wrong on some of this. Probably wrong on specifics. Maybe wrong on fundamentals. But being wrong is the first step toward being right — you have to build something concrete enough to be *wrong about* before you can iterate toward something true. The specs are published. The code is open. If I'm wrong, someone can show me where. That's the point. This is about making the thing exist, not about me being right.
+
 I can hold the vision. I can integrate the pieces. I can write the specs and build the prototypes and push the architecture forward. But I can't simultaneously be an ML optimization expert and a robotics engineer and a data analyst and a community manager and a fundraiser. The work is too broad and too deep for any single person, no matter how obsessive.
 
 What I've built alone should not have been possible alone. That I got this far says something about the validity of the approach. But getting from "working prototype" to "product in homes" requires resources and collaborators I don't currently have.
