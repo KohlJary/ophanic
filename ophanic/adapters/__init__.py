@@ -7,6 +7,14 @@ from .react_reverse import (
     react_to_ophanic,
     ReverseOptions,
 )
+from .figma import (
+    figma_to_ophanic,
+    figma_to_diagram,
+    FigmaOptions,
+    FigmaClient,
+    FigmaAPIError,
+    extract_file_key,
+)
 
 __all__ = [
     # Forward (IR → React)
@@ -17,4 +25,11 @@ __all__ = [
     "generate_diagram",
     "react_to_ophanic",
     "ReverseOptions",
+    # Figma import
+    "figma_to_ophanic",
+    "figma_to_diagram",
+    "FigmaOptions",
+    "FigmaClient",
+    "FigmaAPIError",
+    "extract_file_key",
 ]

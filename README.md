@@ -33,12 +33,12 @@ Fixed-width Unicode box-drawing characters encode proportional spatial relations
 
 ## Status
 
-**Core toolchain complete.** Parser, React adapter, and reverse adapter are functional.
+**Core toolchain complete.** Parser, React adapter, reverse adapter, and Figma import are functional.
 
 - [x] Parser — read box-drawing characters, emit layout IR
 - [x] React adapter — generate components from IR
 - [x] Reverse adapter — generate diagrams from existing React/CSS
-- [ ] Figma import — generate diagrams from design files
+- [x] Figma import — generate diagrams from design files
 
 ## Installation
 
@@ -110,6 +110,31 @@ ophanic reverse src/components/Dashboard.tsx --width 100
 
 # Output to file
 ophanic reverse src/components/Dashboard.tsx -o dashboard.oph
+```
+
+### Import from Figma
+
+```bash
+# Set your Figma token (get from Figma > Settings > Security > Personal access tokens)
+export FIGMA_TOKEN=your_token_here
+
+# Import from Figma URL
+ophanic figma "https://www.figma.com/file/abc123XYZ/MyDesign"
+
+# Or use the file key directly
+ophanic figma abc123XYZ
+
+# Custom diagram width
+ophanic figma abc123XYZ --width 100
+
+# Filter to specific pages
+ophanic figma abc123XYZ --page "Desktop" --page "Mobile"
+
+# Limit traversal depth (faster for large files)
+ophanic figma abc123XYZ --depth 3
+
+# Output to file
+ophanic figma abc123XYZ -o design.oph
 ```
 
 ## Claude Code Plugin

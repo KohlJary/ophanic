@@ -116,6 +116,49 @@ def main(args: list[str] | None = None) -> int:
     analyze_cmd.add_argument("-o", "--output", type=Path, help="Output file")
     analyze_cmd.add_argument("--width", type=int, default=80, help="Diagram width")
 
+    # figma command
+    figma_cmd = subparsers.add_parser(
+        "figma",
+        help="Import a Figma file to Ophanic diagram",
+    )
+    figma_cmd.add_argument(
+        "file_key",
+        help="Figma file key or URL (e.g., abc123XYZ or https://figma.com/file/abc123XYZ/...)",
+    )
+    figma_cmd.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Output file (default: stdout)",
+    )
+    figma_cmd.add_argument(
+        "--token",
+        help="Figma personal access token (or set FIGMA_TOKEN env var)",
+    )
+    figma_cmd.add_argument(
+        "--width",
+        type=int,
+        default=80,
+        help="Diagram width in characters (default: 80)",
+    )
+    figma_cmd.add_argument(
+        "--depth",
+        type=int,
+        help="Limit traversal depth (default: full tree)",
+    )
+    figma_cmd.add_argument(
+        "--node",
+        dest="node_ids",
+        action="append",
+        help="Specific node ID to fetch (can be repeated)",
+    )
+    figma_cmd.add_argument(
+        "--page",
+        dest="pages",
+        action="append",
+        help="Filter by page name (can be repeated)",
+    )
+
     parsed = parser.parse_args(args)
 
     if parsed.command == "parse":
@@ -124,6 +167,8 @@ def main(args: list[str] | None = None) -> int:
         return _handle_generate(parsed)
     if parsed.command in ("reverse", "analyze"):
         return _handle_reverse(parsed)
+    if parsed.command == "figma":
+        return _handle_figma(parsed)
 
     return 0
 
@@ -261,6 +306,40 @@ def _handle_reverse(args: argparse.Namespace) -> int:
 
     except FileNotFoundError:
         print(f"Error: File not found: {args.file}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+def _handle_figma(args: argparse.Namespace) -> int:
+    """Handle the figma command."""
+    try:
+        from .adapters.figma import figma_to_diagram, FigmaOptions, FigmaAPIError
+
+        options = FigmaOptions(
+            token=args.token,
+            depth=args.depth,
+            node_ids=args.node_ids or [],
+            include_pages=args.pages or [],
+            diagram_width=args.width,
+        )
+
+        output = figma_to_diagram(args.file_key, options)
+
+        if args.output:
+            args.output.write_text(output, encoding="utf-8")
+            print(f"Written to: {args.output}")
+        else:
+            print(output)
+
+        return 0
+
+    except FigmaAPIError as e:
+        print(f"Figma API error: {e.message}", file=sys.stderr)
+        return 1
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
         return 1
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
