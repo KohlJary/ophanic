@@ -70,6 +70,11 @@ def build_decision_prompt(
 
     recent = agent.action_history[-5:] if agent.action_history else ["(just arrived)"]
 
+    # Add hint about moving to find people
+    movement_hint = ""
+    if not npcs_in_room and any("dialogue" in g.lower() or "social" in g.lower() for g in goals):
+        movement_hint = "\nNote: No one is here. Move to another room to find people to talk to."
+
     prompt = f"""You are navigating The Velvet, a social venue at night.
 
 ## Current Perception
@@ -88,11 +93,11 @@ def build_decision_prompt(
 {chr(10).join(f"- {a}" for a in recent)}
 
 ## NPCs Present
-{_format_npcs(npcs_in_room)}
+{_format_npcs(npcs_in_room)}{movement_hint}
 
-Based on your perception, felt state, and goals, what do you do?
-Respond with ONLY the action command (e.g., "move north" or "talk mika").
-Choose the action that best addresses your current needs while respecting the situation."""
+What do you do? Pick ONE action from the list above.
+Respond with ONLY the action command (e.g., "move east" or "talk dove").
+If you have social goals but no one is around, MOVE to find people."""
 
     return prompt
 
