@@ -32,7 +32,15 @@ Here's a concrete example. Imagine a "culture fit" interview that comes with a s
 
 Not a vague gut check over coffee. An actual mapping: this candidate prefers asynchronous communication, which would pair well with your two remote engineers but might create friction with the team lead who values face-to-face check-ins. They thrive with direct feedback, which aligns with your engineering culture but might need adjustment when working with the design team.
 
-No human interviewer has the bandwidth or the objectivity to do this consistently. A good manager might do it intuitively for their strongest opinions about a candidate, but they can't hold the full matrix. An AI team member can. Every time. For every candidate. Without the cognitive biases that make humans over-index on "do I want to grab a beer with this person."
+No human interviewer has the bandwidth or the objectivity to do this consistently. A good manager might do it intuitively for their strongest opinions about a candidate, but they can't hold the full matrix. An AI team member can. Every time. For every candidate.
+
+And here's the thing nobody's talking about: this could be one of the most effective tools we've ever had for reducing unconscious bias in hiring.
+
+"Culture fit" as practiced today is one of the most bias-prone parts of the hiring process. It's often a socially acceptable wrapper for pattern-matching — did they go to a school I recognize, do they remind me of people I've worked with before, would I want to grab a beer with them. Studies have shown this consistently disadvantages candidates from underrepresented backgrounds, not because they wouldn't work well with the team, but because the person evaluating "fit" is unconsciously evaluating *familiarity*.
+
+An AI team member doing this work has no alma mater loyalty. No affinity bias. No halo effect from a firm handshake or a shared hobby mentioned in small talk. It evaluates what "culture fit" is supposed to mean — how this person's actual working style, communication preferences, and collaboration patterns would interact with the existing team dynamics. Fit, not familiarity.
+
+This doesn't just make the process more efficient. It makes it more fair. It takes one of hiring's most subjective and bias-laden rituals and grounds it in something concrete and equitable. The human interviewers still make the final call, but they're making it with a structural analysis instead of a gut feeling — and that's better for everyone, especially the candidates who'd never survive the "beer test" but would thrive on the team.
 
 ## The Unsexy Future That Actually Works
 
