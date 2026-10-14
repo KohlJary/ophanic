@@ -8,13 +8,20 @@ from __future__ import annotations
 
 import base64
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from .models import AffectVector, Goal, NeedsRegister, ThymosState
 
 
 SCHEMA_VERSION = 1
+
+
+def _iso_z(ts: datetime) -> str:
+    """Format a UTC timestamp as ISO 8601 with a Z suffix (no +00:00)."""
+    if ts.tzinfo is not None:
+        ts = ts.astimezone(timezone.utc).replace(tzinfo=None)
+    return ts.isoformat() + "Z"
 
 
 def serialize(state: ThymosState, compact: bool = False) -> str:
@@ -30,7 +37,7 @@ def serialize(state: ThymosState, compact: bool = False) -> str:
     """
     data = {
         "v": SCHEMA_VERSION,
-        "ts": state.timestamp.isoformat() + "Z",
+        "ts": _iso_z(state.timestamp),
         "affect": state.affect.to_dict(),
         "needs": state.needs.to_dict(),
         "felt": state.felt_summary,
@@ -72,8 +79,10 @@ def _from_dict(obj: dict[str, Any]) -> ThymosState:
         # Handle both with and without Z suffix
         ts_str = ts_str.rstrip("Z")
         timestamp = datetime.fromisoformat(ts_str)
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
     else:
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now(timezone.utc)
 
     # Parse affect
     affect = AffectVector.from_dict(obj.get("affect", {}))
@@ -109,7 +118,7 @@ def to_pretty_json(state: ThymosState) -> str:
     """
     data = {
         "version": SCHEMA_VERSION,
-        "timestamp": state.timestamp.isoformat() + "Z",
+        "timestamp": _iso_z(state.timestamp),
         "context": state.context,
         "affect": state.affect.to_dict(),
         "needs": state.needs.to_dict(),
