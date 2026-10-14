@@ -92,7 +92,7 @@ f1e3: Dove | met 2025-12-15 | close friend | musician | she/her
 - Warning flags (⚠) on relationships that need attention
 - ~100 additional tokens for six people
 
-**Total default context load: ~300 tokens** for full social awareness of a six-person room. Compare to 10–20k tokens for conversation-history-based approaches.
+**Total default context load: ~300 tokens** (estimated) for social awareness of a six-person room. Compare to an estimated 10–20k tokens for conversation-history-based approaches. Whether the map actually gives *equivalent* awareness is untested: the next step is task accuracy, map vs. history.
 
 ### Layer 3: Drill-Down Tools
 
@@ -449,7 +449,7 @@ At each level, the same principles apply: aggregate affect is computed from cons
 | Temporal stack (5 snapshots) | ~50 | On demand |
 | Location hierarchy | ~100 | On demand |
 
-Compare to conversation-history approach: **300 tokens vs. 10,000–20,000 tokens** for equivalent social awareness. This isn't a marginal improvement. It's the difference between "feasible in current context windows" and "impossible without aggressive summarization that loses the structure that matters."
+Compare to conversation-history approach: **an estimated 300 tokens vs. 10,000–20,000 tokens**, if the map turns out to give equivalent social awareness (not yet tested). If it does, this isn't a marginal improvement. It's the difference between "feasible in current context windows" and "impossible without aggressive summarization that loses the structure that matters."
 
 ## Relationship to Ophanic Core
 

@@ -12,7 +12,7 @@
 
 Ophanic is a layout specification language that uses Unicode box-drawing characters to encode spatial relationships in plain text. It improves LLM-generated frontend code by making layout structure directly perceivable rather than requiring spatial simulation from abstract descriptions.
 
-This claim is empirically supported. In A/B testing, an LLM implementing a complex dashboard from an Ophanic diagram achieved correct proportions, implemented all three responsive breakpoints, and resolved ambiguous component details on the first attempt — none of which occurred when working from a traditional text specification.
+This claim has preliminary support from one pilot. In a single A/B run, an LLM implementing a complex dashboard from an Ophanic diagram achieved correct proportions, implemented all three responsive breakpoints, and resolved ambiguous component details on the first attempt — none of which occurred when working from a traditional text specification. (**Correction (2026-10-14):** an earlier version called this claim "empirically supported." It rests on one run with one model, judged by the model itself, and the diagram carried details the prose spec lacked, so the two arms weren't matched. See [`ab-test/RESULTS.md`](../ab-test/RESULTS.md). A matched-information, multi-run, blind-judged test would settle it.)
 
 This paper is not about that claim. This paper is about what that result implies.
 
@@ -61,7 +61,7 @@ Current language models were not trained on Ophanic diagrams. Whatever spatial c
 
 This raises two questions:
 
-**First**: How much spatial comprehension has already emerged, unnoticed, because no one has systematically tested it with purpose-built representations? The A/B test results suggest it is significant — the model correctly inferred proportions, nesting, and adjacency from character positions without any specialized training.
+**First**: How much spatial comprehension has already emerged, unnoticed, because no one has systematically tested it with purpose-built representations? The A/B pilot hints that it may be significant — the model correctly inferred proportions, nesting, and adjacency from character positions without any specialized training.
 
 **Second**: What would happen if models were trained deliberately on spatial text encodings? If emergent spatial reasoning from incidental exposure to ASCII art and code formatting already produces meaningful results, targeted training on Ophanic-style representations could produce substantially stronger spatial perception capabilities.
 

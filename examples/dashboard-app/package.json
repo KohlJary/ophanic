@@ -2,7 +2,7 @@
   "name": "dashboard-app",
   "private": true,
   "version": "0.1.0",
-  "description": "Dashboard app generated from Figma via Ophanic",
+  "description": "Dashboard app built from a Figma import via Ophanic: dashboard.oph and src/tokens.css are tool output; the React pages were written by Claude from the diagram",
   "type": "module",
   "scripts": {
     "dev": "vite",
