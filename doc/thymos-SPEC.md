@@ -562,4 +562,4 @@ The tiered approach mirrors biological memory consolidation — recent experienc
 
 ## License
 
-[Hippocratic License 3.0](LICENSE.md) — An ethical open source license.
+[Hippocratic License 3.0](../LICENSE.md) — An ethical open source license.

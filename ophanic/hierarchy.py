@@ -5,6 +5,9 @@ from __future__ import annotations
 from .models import BoundingBox, Direction, LayoutNode, NodeType
 from .box_detector import DetectedBox
 
+# Unicode box-drawing block (U+2500–U+257F)
+BOX_DRAWING = frozenset(chr(c) for c in range(0x2500, 0x2580))
+
 
 def has_vertical_overlap(a: BoundingBox, b: BoundingBox) -> bool:
     """Check if two boxes share vertical space (overlap in rows)."""
@@ -46,12 +49,14 @@ def classify_content(content: str) -> tuple[NodeType, str | None]:
     # Has meaningful text = label
     # Extract first significant word/phrase as name
     lines = stripped.split("\n")
-    first_line = lines[0].strip() if lines else ""
 
-    # Clean up the label (remove box chars, extra spaces)
-    label = first_line.strip()
-    if label:
-        return (NodeType.LABEL, label)
+    # Clean up the label (remove box chars, extra spaces). Fragments of
+    # unclosed/undetected boxes inside this one shouldn't become the label,
+    # so take the first line that still has text once box chars are gone.
+    for line in lines:
+        label = "".join(c for c in line if c not in BOX_DRAWING).strip()
+        if label:
+            return (NodeType.LABEL, label)
 
     return (NodeType.CONTAINER, None)
 
@@ -191,12 +196,66 @@ def _finalize_node(node: LayoutNode) -> None:
     node.type = NodeType.CONTAINER
     node.name = None  # Clear any name from nested content
 
-    # Infer direction from child arrangement
-    node.direction = infer_direction(node.children)
+    # Infer direction from child arrangement (implicit rows from
+    # _group_rows already have theirs)
+    if node.direction is None:
+        node.direction = infer_direction(node.children)
 
     # Sort children by position
     node.children = sort_children(node.children, node.direction)
 
+    # A column whose children sit side by side in places (e.g. sidebar +
+    # content under a header) gets each such band wrapped in an implicit row
+    if node.direction == Direction.COLUMN:
+        node.children = _group_rows(node.children)
+
     # Recurse
     for child in node.children:
         _finalize_node(child)
+
+
+def _group_rows(children: list[LayoutNode]) -> list[LayoutNode]:
+    """Wrap horizontally-adjacent children of a column into implicit rows.
+
+    Children (already sorted top-to-bottom) are split into bands of
+    vertically-overlapping boxes. A band with one child stays as-is; a band
+    with several becomes a ROW container whose bounds span the band.
+    """
+    bands: list[list[LayoutNode]] = []
+    band_bottom = -1
+    for child in children:
+        b = child.source_bounds
+        if b is None:
+            bands.append([child])
+            band_bottom = -1
+            continue
+        if bands and band_bottom > b.top:
+            bands[-1].append(child)
+            band_bottom = max(band_bottom, b.bottom)
+        else:
+            bands.append([child])
+            band_bottom = b.bottom
+
+    if len(bands) == 1:
+        # Everything overlaps (transitively): nothing to split, leave as-is
+        return children
+
+    grouped: list[LayoutNode] = []
+    for band in bands:
+        if len(band) == 1:
+            grouped.append(band[0])
+            continue
+        bounds = [c.source_bounds for c in band]
+        row = LayoutNode(
+            type=NodeType.CONTAINER,
+            direction=Direction.ROW,
+            children=sort_children(band, Direction.ROW),
+            source_bounds=BoundingBox(
+                top=min(x.top for x in bounds),
+                left=min(x.left for x in bounds),
+                bottom=max(x.bottom for x in bounds),
+                right=max(x.right for x in bounds),
+            ),
+        )
+        grouped.append(row)
+    return grouped

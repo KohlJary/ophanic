@@ -1,5 +1,7 @@
 # A/B Test Results: Ophanic Diagram Impact
 
+> **Read this as a pilot, not evidence.** This was a single run, judged by the same model that did the implementing. The two specs weren't equivalent: the Ophanic diagram carried details the prose spec never mentioned (the grey icon box on metric cards, right-aligned timestamps, the "View All →" arrow, the divider under the feed header, and the exact calendar day/month), so Version B "getting them right" partly reflects having more information. The prose spec *did* state the 65/35 and 70/30 ratios explicitly, so the proportion difference isn't a diagram-vs-no-diagram effect. The "~60% vs ~90%" figures are the model's self-reported confidence, not a measured outcome. A real test needs matched specs, multiple runs, and blind or rendered-output judging.
+
 ## Setup
 - **Design**: Dashboard with header, sidebar, metric cards, chart, activity feed, table, calendar
 - **Complexity**: 3 breakpoints, 5 distinct components, non-obvious proportions (65/35, 70/30)
@@ -18,10 +20,10 @@
 ## Visual Comparison (Full Width Desktop)
 
 ### Version A — No Diagram
-![Version A Screenshot](screenshots/version-a-desktop.png)
+![Version A Screenshot](screenshots/A-1080w.png)
 
 ### Version B — With Ophanic
-![Version B Screenshot](screenshots/version-b-desktop.png)
+![Version B Screenshot](screenshots/B-1080w.png)
 
 ### Observable Differences
 

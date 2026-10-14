@@ -8,7 +8,7 @@ that form the homeostatic self-model.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 
 
@@ -299,7 +299,7 @@ class ThymosState:
     needs: NeedsRegister = field(default_factory=NeedsRegister)
     felt_summary: str = ""
     active_goals: list[Goal] = field(default_factory=list)
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     context: str | None = None
 
     def copy(self) -> ThymosState:
