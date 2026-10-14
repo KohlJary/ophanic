@@ -7,7 +7,11 @@ import HallManagement from './pages/HallManagement';
 import PricingStrategy from './pages/PricingStrategy';
 
 /**
- * Dashboard App - Generated from Figma via Ophanic
+ * Dashboard App - built from a Figma import via Ophanic
+ *
+ * dashboard.oph (ophanic figma) and tokens.css (ophanic tokens) are tool
+ * output; these React components were written by Claude from the diagram,
+ * not emitted by `ophanic generate`.
  *
  * Source: Dashboard Design Template (Community)
  * Tokens extracted: 35 colors, 38 typography styles

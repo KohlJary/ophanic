@@ -38,7 +38,7 @@ Fixed-width Unicode box-drawing characters encode proportional spatial relations
 - [x] Parser — read box-drawing characters, emit layout IR
 - [x] React adapter — generate components from IR
 - [x] Reverse adapter — generate diagrams from existing React/CSS
-- [x] Figma import — generate diagrams from design files
+- [x] Figma import — generate diagrams from design files (no automated tests yet)
 
 ## Installation
 
@@ -204,7 +204,7 @@ Key elements:
 ## Documentation
 
 - [SPEC.md](SPEC.md) — Full concept specification
-- [ab-test/RESULTS.md](ab-test/RESULTS.md) — A/B test results and analysis
+- [ab-test/RESULTS.md](ab-test/RESULTS.md) — A/B pilot: one run, one model, self-judged, unequal specs (a pilot, not a result)
 
 ## Development
 

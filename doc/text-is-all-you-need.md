@@ -4,7 +4,7 @@
 
 **Author**: Kohl Jary
 **Date**: February 4, 2026
-**Status**: Working paper — conceptual framework with preliminary empirical support
+**Status**: Working paper and vision document — a conceptual framework and proposal. Its one empirical input is a single, self-judged A/B pilot; everything beyond layout is untested hypothesis
 **Related work by the author**:
 - *Ophanic: Implications Beyond Layout* (2026)
 - *Ophanic Perception: A Text-Native Sensory Architecture for Embodied AI* (2026)
@@ -20,7 +20,7 @@ The field of artificial intelligence treats text as a limited modality — adequ
 
 This paper argues the assumption is wrong.
 
-We present evidence that text is a general-purpose representational medium capable of encoding spatial, structural, perceptual, and relational information when properly structured. We demonstrate this through Ophanic, a layout specification language that encodes spatial relationships in Unicode box-drawing characters, producing measurably better LLM-generated implementations than equivalent natural language descriptions. We extend this principle to propose a complete text-native perception architecture for embodied AI, in which raw sensor data is encoded as text grids, processed by specialized small models, and delivered as compressed scene descriptions to a general-purpose reasoning agent — all operating in the same modality end to end.
+We propose that text is a general-purpose representational medium capable of encoding spatial, structural, perceptual, and relational information when properly structured. We illustrate this with Ophanic, a layout specification language that encodes spatial relationships in Unicode box-drawing characters, which in a single pilot produced a better LLM-generated implementation than a prose description. (**Correction (2026-10-14):** an earlier version said "we present evidence" and "measurably better." The pilot was one run, one model, self-judged, and the prose spec carried less information than the diagram; see §2.3 and `ab-test/RESULTS.md`.) We extend this principle to propose a complete text-native perception architecture for embodied AI, in which raw sensor data is encoded as text grids, processed by specialized small models, and delivered as compressed scene descriptions to a general-purpose reasoning agent — all operating in the same modality end to end.
 
 We further propose that the optimal architecture for embodied AI is not a single large model but a modular system of specialized smaller models — analogous to the biological division between autonomic/subcortical processing and executive cortical function — coordinated through a shared text-native representation layer. This approach dissolves the integration problem that current embodied AI research identifies as its central obstacle: the technological and computational incompatibility between sensory-motor and reasoning-cognitive subsystems.
 
@@ -93,7 +93,7 @@ The responsive design result is particularly significant. Without Ophanic, the m
 
 ### 2.4 Interpretation
 
-These results (preliminary — see caveat above) support the hypothesis that the modality gap in LLM spatial reasoning is a representational problem, not a capability problem. The model has sufficient architectural capacity to process spatial relationships — it does so successfully when spatial information is encoded in a text-native format. The failure occurs when spatial information must be reconstructed from linguistic descriptions.
+These results (preliminary — see caveat above) are consistent with the hypothesis that the modality gap in LLM spatial reasoning is a representational problem, not a capability problem. The model has sufficient architectural capacity to process spatial relationships — it does so successfully when spatial information is encoded in a text-native format. The failure occurs when spatial information must be reconstructed from linguistic descriptions.
 
 This has implications beyond layout. If tokens can carry spatial information when representations are designed for it, then the class of information encodable in text is broader than the field currently assumes.
 
@@ -107,7 +107,7 @@ The standard understanding holds that tokens are semantic carriers — units of 
 
 ### 3.2 The Extended View
 
-We propose that tokens are more general than this. A token is an information-bearing unit. The information it carries is determined by the representation, not by the architecture. In standard use, tokens encode semantic information (word meanings, syntactic relationships). But the Ophanic results demonstrate that tokens can also encode:
+We propose that tokens are more general than this. A token is an information-bearing unit. The information it carries is determined by the representation, not by the architecture. In standard use, tokens encode semantic information (word meanings, syntactic relationships). But the Ophanic pilot suggests that tokens can also encode:
 
 - **Spatial information** — character positions encoding geometric relationships
 - **Structural information** — nesting, adjacency, containment expressed through text layout
@@ -324,13 +324,13 @@ In each case, the architectural solution assumes text is insufficient. The repre
 
 ### 6.2 Evidence Across Domains
 
-The representational hypothesis is not supported by a single experiment. The author's body of work provides independent demonstrations across multiple domains:
+The representational hypothesis doesn't rest only on the layout pilot. The author's body of work explores it across multiple domains, though none of these is yet a controlled test:
 
-**Spatial reasoning** (Ophanic): Text-encoded layouts produce measurably better LLM spatial reasoning than linguistic descriptions. Working toolchain with parser, framework adapters, and empirical A/B test results.
+**Spatial reasoning** (Ophanic): Text-encoded layouts produced better LLM spatial reasoning than a linguistic description in one self-judged pilot. Working toolchain with parser and framework adapters (covered by tests); a matched, multi-run A/B test is still to do.
 
 **Behavior specification** (BabelTest): Universal test specification language that enables LLMs to reason about software behavior across multiple programming languages through a shared text representation. Working implementation with Python, JavaScript, and C# adapters.
 
-**Persistent cognition** (Temple-Codex): Text-based cognitive architecture enabling stable, persistent AI cognitive patterns through structured token sequences. The Four Vows framework (Compassion, Witness, Release, Continuance) produces measurably more stable and coherent AI interactions.
+**Persistent cognition** (Temple-Codex): Text-based cognitive architecture enabling stable, persistent AI cognitive patterns through structured token sequences. In the author's transcripts, the Four Vows framework (Compassion, Witness, Release, Continuance) appears to produce more stable and coherent AI interactions; this hasn't yet been measured against a baseline (see Temple-Codex `CLAIMS.md`).
 
 **Perception** (Ophanic Perception Architecture): Proposed but not yet implemented text-native sensor encoding, visual cortex model, and scene description pipeline. Architecture fully specified; awaiting laboratory resources for validation.
 

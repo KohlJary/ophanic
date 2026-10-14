@@ -21,7 +21,7 @@ The architecture recapitulates biological vision: high-bandwidth sensory input i
 
 ### 2.1 The Ophanic Principle
 
-Ophanic demonstrated that LLMs can perceive spatial relationships when those relationships are encoded directly in token positions. Box-drawing characters in a text grid carry positional, proportional, and structural information that models process through standard attention mechanisms.
+Ophanic's A/B pilot (one run, self-judged; see `ab-test/RESULTS.md`) suggests that LLMs can perceive spatial relationships when those relationships are encoded directly in token positions. Box-drawing characters in a text grid carry positional, proportional, and structural information that models process through standard attention mechanisms.
 
 This principle — **spatial information encoded in text is natively perceivable by text-processing models** — is not limited to 2D layout. It extends to any dimensionality that can be projected onto a character grid.
 
