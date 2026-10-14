@@ -76,6 +76,8 @@ The model does not need to simulate what this looks like. The tokens carry the s
 
 ### 2.3 A/B Test Results
 
+> *Caveat:* this was a single, self-judged pilot run with unequal specs; the confidence figures are self-reported. See the note at the top of [`ab-test/RESULTS.md`](../ab-test/RESULTS.md) before treating these numbers as an empirical result.
+
 We tested the Ophanic hypothesis by giving the same LLM the same dashboard implementation task, once with a traditional text specification and once with an Ophanic diagram. The dashboard included a header, sidebar, metric cards, chart, activity feed, table, and calendar widget, with three responsive breakpoints and non-obvious proportions (65/35, 70/30).
 
 | Aspect | Text Specification | Ophanic Diagram |
@@ -91,7 +93,7 @@ The responsive design result is particularly significant. Without Ophanic, the m
 
 ### 2.4 Interpretation
 
-These results support the hypothesis that the modality gap in LLM spatial reasoning is a representational problem, not a capability problem. The model has sufficient architectural capacity to process spatial relationships — it does so successfully when spatial information is encoded in a text-native format. The failure occurs when spatial information must be reconstructed from linguistic descriptions.
+These results (preliminary — see caveat above) support the hypothesis that the modality gap in LLM spatial reasoning is a representational problem, not a capability problem. The model has sufficient architectural capacity to process spatial relationships — it does so successfully when spatial information is encoded in a text-native format. The failure occurs when spatial information must be reconstructed from linguistic descriptions.
 
 This has implications beyond layout. If tokens can carry spatial information when representations are designed for it, then the class of information encodable in text is broader than the field currently assumes.
 
