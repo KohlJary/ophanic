@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 
 from .models import BoundingBox
@@ -13,6 +14,25 @@ BOTTOM_LEFT_CORNERS = set("└├")  # Can end left edge
 BOTTOM_RIGHT_CORNERS = set("┘┴┤")  # Can close a box
 HORIZONTAL = set("─┬┴┼")
 VERTICAL = set("│├┤┼")
+
+# Placeholder occupying the second display column of a wide character
+WIDE_PAD = "\x00"
+
+
+def align_wide_chars(lines: list[str]) -> list[str]:
+    """Pad wide (2-column) characters so string index == display column.
+
+    Diagrams are drawn to line up visually, so a line containing e.g. 📊
+    has every border after it one index to the left of where it is on
+    other lines. Padding fixes edge tracing; extract_content strips the pad.
+    """
+    return [
+        "".join(
+            c + WIDE_PAD if unicodedata.east_asian_width(c) in ("W", "F") else c
+            for c in line
+        )
+        for line in lines
+    ]
 
 
 @dataclass
@@ -144,6 +164,8 @@ def extract_content(lines: list[str], bounds: BoundingBox) -> tuple[str, list[st
         else:
             content_lines.append("")
 
+    content_lines = [line.replace(WIDE_PAD, "") for line in content_lines]
+
     # Join and strip for single content string
     full_content = "\n".join(content_lines).strip()
 
@@ -157,6 +179,7 @@ def detect_boxes(lines: list[str]) -> list[DetectedBox]:
     Returns boxes sorted by area (largest first).
     """
     boxes: list[DetectedBox] = []
+    lines = align_wide_chars(lines)
 
     for row, line in enumerate(lines):
         for col, char in enumerate(line):
