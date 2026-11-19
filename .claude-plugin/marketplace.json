@@ -1,0 +1,14 @@
+{
+  "name": "ophanic",
+  "owner": {
+    "name": "Kohl"
+  },
+  "plugins": [
+    {
+      "name": "ophanic",
+      "source": "./plugin",
+      "description": "Draw UI layouts as Unicode box diagrams before building them, and keep the drawings as the project's map of its interface"
+    }
+  ],
+  "description": "Ophanic: layout diagrams an LLM can read and write"
+}

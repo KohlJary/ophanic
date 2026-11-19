@@ -1,6 +1,6 @@
 ---
 description: Generate visual layout diagram from a React component
-allowed-tools: Bash(python -m ophanic:*), Read, Write
+allowed-tools: Bash(ophanic:*), Read, Write
 ---
 
 Generate a visual layout diagram from a React component using Ophanic.
@@ -21,6 +21,8 @@ Generate a visual layout diagram from a React component using Ophanic.
 
 ## Instructions
 
+`reverse` reads TSX with patterns, not a parser. On a component with hooks or handlers, check the result: if the boxes are labelled with code fragments, say so, then read the component and draw it by hand instead (the `draw-first` skill), and save that.
+
 When the user invokes this command:
 
 1. **Parse the arguments** to extract:
@@ -30,12 +32,12 @@ When the user invokes this command:
 
 2. **Generate the diagram** using the ophanic CLI:
    ```bash
-   python -m ophanic reverse <component-path> --width <width>
+   ophanic reverse <component-path> --width <width>
    ```
 
 3. **If output file specified**, save the diagram:
    ```bash
-   python -m ophanic reverse <component-path> -o <output-file> --width <width>
+   ophanic reverse <component-path> -o <output-file> --width <width>
    ```
 
 4. **Display the diagram** to the user and explain:

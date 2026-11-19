@@ -11,9 +11,11 @@ Help Claude Code understand, visualize, and modify UI layouts by:
 
 ## Capabilities
 
+> **`reverse` isn't reliable on real components yet.** It reads TSX with patterns rather than a parser, so components with hooks or handlers come back with code fragments as labels. For those, read the component and draw it by hand (see the `draw-first` skill); use `reverse` only for a rough nesting sketch of simple components.
+
 ### Analyze Existing Code (React → Ophanic)
 ```bash
-python -m ophanic reverse <component.tsx> [--css <styles.css>] [--width 80]
+ophanic reverse <component.tsx> [--css <styles.css>] [--width 80]
 ```
 
 The `reverse` command auto-detects CSS approach:
@@ -22,12 +24,12 @@ The `reverse` command auto-detects CSS approach:
 
 ### Generate React from Ophanic
 ```bash
-python -m ophanic generate <layout.oph> [--target react] [--no-tailwind]
+ophanic generate <layout.oph> [--target react] [--no-tailwind]
 ```
 
 ### Parse Ophanic to JSON IR
 ```bash
-python -m ophanic parse <layout.oph> [--pretty]
+ophanic parse <layout.oph> [--pretty]
 ```
 
 ## Workflow: Making a Component Responsive

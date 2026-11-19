@@ -1,48 +1,20 @@
 # Ophanic Plugin for Claude Code
 
-Visual layout diagrams for React components using Unicode box-drawing characters.
-
-## Features
-
-- **`/diagram` command**: Generate layout diagrams from React components
-- **`ophanic` agent**: Specialized agent for layout analysis and responsive design
+Draw UI layouts as Unicode box diagrams before building them, and keep the drawings as the project's map of its interface.
 
 ## Installation
 
-### Option 1: Symlink (Development)
-
 ```bash
-# Create the local plugins directory if it doesn't exist
-mkdir -p ~/.claude/plugins/cache/local
-
-# Symlink the plugin
-ln -s /path/to/ophanic/plugin ~/.claude/plugins/cache/local/ophanic
+claude plugin marketplace add /path/to/ophanic   # or KohlJary/ophanic
+claude plugin install ophanic@ophanic
 ```
 
-### Option 2: Manual Registration
+You also need the CLI on your PATH: `pipx install git+https://github.com/KohlJary/ophanic.git`.
 
-Add to `~/.claude/plugins/installed_plugins.json`:
+## What's in it
 
-```json
-{
-  "ophanic@local": [{
-    "scope": "user",
-    "installPath": "/path/to/ophanic/plugin",
-    "version": "1.0.0",
-    "installedAt": "2024-01-01T00:00:00.000Z",
-    "lastUpdated": "2024-01-01T00:00:00.000Z",
-    "isLocal": true
-  }]
-}
-```
-
-## Requirements
-
-The `ophanic` Python package must be installed:
-
-```bash
-pip install -e /path/to/ophanic
-```
+- **`draw-first` skill**: draw a UI before building it, agree on the drawing, build from it, and keep it in `layouts/` as the map of the interface.
+- **`/diagram` command** and **`ophanic` agent**: diagrams from existing React components. `reverse` isn't reliable on complex components yet; they say so and fall back to drawing by hand.
 
 ## Usage
 
