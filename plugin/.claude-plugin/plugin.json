@@ -1,6 +1,6 @@
 {
   "name": "ophanic",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Draw UI layouts as Unicode box diagrams before building them, and keep the drawings as the project's map of its interface",
   "author": {
     "name": "Kohl",
