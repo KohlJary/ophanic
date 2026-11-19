@@ -34,22 +34,25 @@ agree on it with the user, build from it, and keep it.
 # ChatView
 
 @desktop
-┌──────────┬───────────────────────────────────┬────────────┐
-│ ◆Servers │ ◆MessageList                      │ ◆RightBar  │
-│          │                                   │            │
-│          ├───────────────────────────────────┤            │
-│          │ ◆Composer                         │            │
-└──────────┴───────────────────────────────────┴────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│┌──────────┐ ┌──────────────────────────────────┐ ┌────────────┐│
+││◆Servers  │ │◆MessageList                      │ │◆RightBar   ││
+│└──────────┘ └──────────────────────────────────┘ └────────────┘│
+└────────────────────────────────────────────────────────────────┘
 
 @narrow
-┌─────────────────────┐
-│ ◆MessageList        │
-├─────────────────────┤
-│ ◆Composer           │
-└─────────────────────┘
+┌──────────────────────┐
+│┌────────────────────┐│
+││◆MessageList        ││
+│└────────────────────┘│
+│┌────────────────────┐│
+││◆Composer           ││
+│└────────────────────┘│
+└──────────────────────┘
 ```
 
-- `┌─┐│└─┘├┤┬┴┼` draw containers; nesting is containment, side by side is a row.
+- Each box is its own `┌─┐ │ └─┘`; nesting is containment, boxes side by side are a row, boxes stacked are a column.
+- **Don't share walls** (`├ ┬ ┴ ┼` grids). The parser reads only the first box of a shared-wall grid today, even though SPEC.md shows that style. Give every box its own corners, one space apart.
 - `◆Name` labels a component. Plain text in a box is placeholder content.
 - `@name` starts a breakpoint or state. `# Title` heads the file.
 - Full spec: `SPEC.md` in the Ophanic repository.
